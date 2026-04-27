@@ -33,13 +33,10 @@ import MathBlock from '@site/src/components/MathBlock';
 
 一个 Position 是否参与交易，只取决于当前价格是否在区间内。
 
-![Diagram 20260427180001](/img/notes/pasted-image-20260427180001.png)
-
-![Diagram 20260427180002](/img/notes/pasted-image-20260427180002.png)
-
-![Diagram 20260427180003](/img/notes/pasted-image-20260427180003.png)
 
 ### Case 1：价格在区间内
+
+![Diagram 20260427180001](/img/notes/pasted-image-20260427180001.png)
 
 ```
 
@@ -57,6 +54,8 @@ tickLower ≤ currentTick < tickUpper
 
 ### Case 2：价格低于区间
 
+![Diagram 20260427180002](/img/notes/pasted-image-20260427180002.png)
+
 ```
 
 currentTick < tickLower
@@ -71,6 +70,8 @@ currentTick < tickLower
 ---
 
 ### Case 3：价格高于区间
+
+![Diagram 20260427180003](/img/notes/pasted-image-20260427180003.png)
 
 ```
 
