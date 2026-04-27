@@ -9,46 +9,46 @@ import MathBlock from '@site/src/components/MathBlock';
 
 ## Overview
 
-In the previous article, we have established the complete static structure of Uniswap V3:
+In the previous article, we established the complete static structure of Uniswap V3:
 
 - Liquidity is defined as a virtual curve within the interval
 - Prices are discretely indexed by tick
 - Use sqrtPriceX96 for exact calculations
 - And achieve efficient interval search through tickBitmap
 
-These contents answer a question: what is the state of the system at any time. However, the core of a CLMM protocol is not the static state, but how the state changes.
+These contents answer one question: what is the state of the system at any time? However, the core of a CLMM protocol is not the static state, but how the state changes.
 
-During the actual transaction:
+During an actual transaction:
 
-- User input token
-- Pool outputs another token
+- The user inputs one token
+- The pool outputs the other token
 - At the same time, the price changes
-- and may span multiple tick intervals
+- The swap may span multiple tick intervals
 
-Therefore, a more fundamental question is: when a swap occurs, how does the price move in the liquidity?  This chapter will systematically analyze the swap mechanism of Uniswap V3 from the perspective of "state change" and focus on answering:
+Therefore, a more fundamental question is: when a swap occurs, how does the price move through liquidity? This chapter systematically analyzes the swap mechanism of Uniswap V3 from the perspective of state change and focuses on answering:
 
 1. How does price move within a single tick?
 2. How to cross ticks when the price hits the boundary?
 3. How does liquidity change across ticks?
 4. How can the entire swap process be broken down into a series of partial steps?
 
-Through this chapter, we will unify all the previous mathematical structures and data structures into a dynamic process: swap = continuous price advancement + discrete liquidity changes + while state machine.
+Through this chapter, we will unify all the previous mathematical structures and data structures into a dynamic process: swap = continuous price advancement + discrete liquidity changes + a while-loop state machine.
 
 ### 1. Swap within a single Tick: `computeSwapStep`
 
-In V3, swap is not as simple as "the user inputs a token, and the pool directly spits out another token according to a certain formula."
+In V3, swap is not as simple as "the user inputs a token, and the pool directly spits out another token according to a formula."
 
 More precisely, the essence of swap is:
 
 - Under the current effective liquidity <InlineMath tex={String.raw`L`} />
 - The price moves continuously along the local curve corresponding to the current tick
-- When the price hits the range boundary, cross over to the next tick
+- When the price hits the range boundary, it crosses to the next tick
 - At the same time, the global effective liquidity is updated according to `liquidityNet`
-- Then continue to push the price within the new liquidity range
+- Then the price continues within the new liquidity range
 
-Therefore, a complete swap is not a formula calculation, but a process composed of multiple local steps. Each partial step answers the same question:
+Therefore, a complete swap is not a single formula calculation, but a process composed of multiple local steps. Each partial step answers the same question:
 
-> Given the current liquidity, current price, target price, and remaining input/output quantities, how far can this step push the price at most?
+> Given the current liquidity, current price, target price, and remaining input/output amounts, how far can this step push the price at most?
 
 That's exactly what `SwapMath.computeSwapStep` does.
 
@@ -68,11 +68,11 @@ The goal of the function is:
 > - The output produced by this step is `amountOut`
 > - The fee charged in this step is `feeAmount`
 
-Therefore, this function is essentially doing a "boundary-constrained local price push."
+Therefore, this function is essentially performing a boundary-constrained local price move.
 
 #### 1.1 First determine the direction of price movement
 
-The first thing for `computeSwapStep` is not to calculate the amount, but to determine whether the price will go left or right at this step.
+The first thing `computeSwapStep` does is not to calculate amounts, but to determine whether the price will move left or right in this step.
 
 ```solidity
 
@@ -82,12 +82,12 @@ bool zeroForOne = sqrtRatioCurrentX96 >= sqrtRatioTargetX96;
 
 This means:
 
-- If `zeroForOne = true`, it means the price target is lower and the price moves to the left
-- If `zeroForOne = false`, it means the price target is higher and the price moves to the right
+- If `zeroForOne = true`, the target price is lower and the price moves to the left
+- If `zeroForOne = false`, the target price is higher and the price moves to the right
 
 This is consistent with the previous price representation: `sqrtPriceX96` is an accurate on-chain representation of price, and the swap process is essentially the process of `sqrtPriceX96` moving on the price axis.
 
-Therefore, `zeroForOne` does not just represent “token0 → token1”, it more essentially represents the direction in which the price advances in the current step.
+Therefore, `zeroForOne` does not just represent “token0 → token1”; more importantly, it represents the direction in which the price advances in the current step.
 
 ![Diagram 20260406163119](/img/notes/pasted-image-20260406163119.png)
 

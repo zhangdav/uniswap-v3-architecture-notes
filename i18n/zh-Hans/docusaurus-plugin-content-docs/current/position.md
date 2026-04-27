@@ -33,7 +33,11 @@ import MathBlock from '@site/src/components/MathBlock';
 
 一个 Position 是否参与交易，只取决于当前价格是否在区间内。
 
-TODO：补图
+![Diagram 20260427180001](/img/notes/pasted-image-20260427180001.png)
+
+![Diagram 20260427180002](/img/notes/pasted-image-20260427180002.png)
+
+![Diagram 20260427180003](/img/notes/pasted-image-20260427180003.png)
 
 ### Case 1：价格在区间内
 

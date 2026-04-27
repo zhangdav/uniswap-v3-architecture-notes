@@ -9,9 +9,9 @@ import MathBlock from '@site/src/components/MathBlock';
 
 ## Overview
 
-In the previous chapter, we have understood that LP participates in swap by providing liquidity. In this chapter we will explain a very core issue in V3: How is LP's return calculated? In Uniswap, LP's income mainly comes from transaction fees `swap fee`, but it is completely different in V2 and V3.
+In the previous chapter, we learned that LPs participate in swaps by providing liquidity. In this chapter, we explain a core question in V3: how are LP returns calculated? In Uniswap, LP income mainly comes from swap fees, but the mechanism is very different between V2 and V3.
 
-In V2, all liquidity is globally shared, there is no price range, and all LP funds participate in every transaction. Therefore, in each swap, the trader pays a fee (such as 0.3%), and these fees will be directly added to the pool's reserve `reserve`. LP does not receive fees directly, but indirectly owns part of the pool's assets through the share of LP tokens.
+In V2, all liquidity is globally shared, there is no price range, and all LP funds participate in every transaction. Therefore, in each swap, the trader pays a fee (such as 0.3%), and those fees are added directly to the pool's reserves. LPs do not receive fees directly, but instead own part of the pool's assets through their LP token share.
 
 Its essence is:
 
@@ -21,13 +21,13 @@ LP income ∝ LP holding shares × accumulated fees of the pool
 
 ```
 
-Therefore, in V2, there is no need to calculate fees on a transaction-by-transaction basis, differentiate between intervals, or track history.
+Therefore, in V2, there is no need to calculate fees transaction by transaction, distinguish between intervals, or track historical state.
 
-However, the problem becomes complicated in V3. In V3, liquidity is distributed in different price ranges, and only active liquidity participates in swap, and the liquidity in each range is different. This means that different LPs participate in transactions to varying degrees at different times and in different intervals.
+However, the problem becomes more complicated in V3. Liquidity is distributed across different price ranges, and only active liquidity participates in swaps. Because liquidity differs across ranges, different LPs participate in transactions to varying degrees at different times and in different intervals.
 
 ## 1. Single swap
 
-Let’s not look at the contract first, let’s start with how it should be calculated theoretically.
+Let’s not look at the contract first. Let’s start with the theoretical calculation.
 
 ![Diagram 20260422111021](/img/notes/pasted-image-20260422111021.png)
 
@@ -36,7 +36,7 @@ Let’s not look at the contract first, let’s start with how it should be calc
 - Dashed line position: price is moving (swap process)
 - f₀, f₁: fees generated in different ranges
 
-Assumption: user exchanges token Y for token X (price moves to the right)
+Assumption: the user exchanges token Y for token X, so the price moves to the right.
 
 ```
 
@@ -80,18 +80,18 @@ Total revenue:
 
 <MathBlock tex={String.raw`f = f_0 \cdot \frac{S}{L_0} + f_1 \cdot \frac{S}{L_1}`} />
 
-Therefore, each price range is an independent fee allocation pool. In each interval, LP will share the fees generated in that interval according to the proportion of its own liquidity to the total liquidity in that interval.
+Therefore, each price range is an independent fee allocation pool. In each interval, LPs share the fees generated in that interval in proportion to their liquidity relative to the total liquidity in that interval.
 
 ## 2. Multiple intervals (introduction time)
 
-However, in V3, it is not a simple single swap, but swaps will occur across multiple intervals, different times, and fee allocations in different intervals.
+However, V3 is not a simple single-swap system. Swaps can span multiple intervals, occur at different times, and generate fee allocations in different intervals.
 
 ![Diagram 20260422111049](/img/notes/pasted-image-20260422111049.png)
 
-Yellow column: total liquidity at a certain time and within a certain tick interval
-- Pink horizontal bar `S`: Liquidity provided by Alice herself
-- Purple mark `L_{i,t}`: Total liquidity in the `t`th moment and `i`th interval
-- Orange mark `f_{i,t}`: fees generated at the `t` time and `i` interval
+- Yellow column: total liquidity at a given time within a given tick interval
+- Pink horizontal bar `S`: liquidity provided by Alice
+- Purple mark `L_{i,t}`: total liquidity in the `t`th moment and `i`th interval
+- Orange mark `f_{i,t}`: fees generated at time `t` in interval `i`
 
 Here we record the "interval" as `i` and the "time" as `t`.
 
@@ -99,7 +99,7 @@ Here we record the "interval" as `i` and the "time" as `t`.
 
 ### Case 1： `t = 0`
 
-At the first moment, the price moved to the right and crossed two ranges.
+At the first moment, the price moves to the right and crosses two ranges.
 
 The corresponding figure is:
 
@@ -121,16 +121,16 @@ Therefore, the total revenue corresponding to the first graph is:
 
 At the second moment, the price moves to the left.
 
-At this moment, the price moves to the left, corresponding to the swap direction X → Y. Since we are currently only concerned about the fee of token Y:
+At this moment, the price moves to the left, corresponding to the swap direction X → Y. Since we are currently only concerned with fees in token Y:
 
 - There will be no Y fee in this direction
-- therefore no contribution to feeGrowth(Y)
+- Therefore, there is no contribution to `feeGrowth(Y)`
 
 therefore:
 
 <MathBlock tex={String.raw`f^{(1)} = 0`} />
 
-Therefore, Alice does not generate distributable fees at every moment and every interval.
+Therefore, Alice does not earn distributable fees at every moment or in every interval.
 
 ---
 
@@ -158,23 +158,23 @@ f_{-2,3} \cdot \frac{S}{L_{-2,3}}
 + f_{-1,3} \cdot \frac{S}{L_{-1,3}}
 + f_{0,3} \cdot \frac{S}{L_{0,3}}`} />
 
-The above has told us a core: LP's fees are not uniformly and evenly distributed across the entire pool, but are calculated separately in each interval based on the proportion of liquidity. If we don't consider time for the moment and only look at the situation where a certain price movement spans multiple intervals, then Alice's total income can be written as:
+The key point is this: LP fees are not uniformly distributed across the entire pool. They are calculated separately in each interval based on liquidity proportion. If we ignore time for the moment and look only at the case where a single price movement spans multiple intervals, then Alice's total income can be written as:
 
 <MathBlock tex={String.raw`f = \sum_i f_i \cdot \frac{S}{L_i}`} />
 
-- `f_i`: Handling fee generated in the `i` step
-- `L_i`: Total liquidity in the `i` interval
+- `f_i`: fee generated in step `i`
+- `L_i`: total liquidity in interval `i`
 - `S`: Alice’s liquidity
 
 What this formula means:
 
 > For each range that the price passes through, Alice will share the fees generated in that range according to her proportion of liquidity in that range.
 
-If `S` is proposed, it can also be written as:
+If we factor out `S`, it can also be written as:
 
 <MathBlock tex={String.raw`f = S \cdot \sum_i \frac{f_i}{L_i}`} />
 
-It's already starting to get close to the idea behind `feeGrowth`.
+This is already close to the idea behind `feeGrowth`.
 
 We added the time dimension earlier, because in reality, swap does not happen only once. Prices will continue to change at different times, and liquidity in different intervals may also change. Therefore, fee distribution is not only "across intervals", but also "across time."
 
@@ -182,7 +182,7 @@ So at the `t`th moment, Alice’s income can be written as:
 
 <MathBlock tex={String.raw`f_t = S \cdot \sum_i \frac{f_{i,t}}{L_{i,t}}`} />
 
-Represents: at time `t`, the sum of Alice’s fee income in all relevant intervals.
+This represents the sum of Alice’s fee income in all relevant intervals at time `t`.
 
 If we add up all the time periods, Alice's total income from the starting moment to the final moment is:
 
@@ -192,15 +192,15 @@ Combining the above two formulas, we can get the final general form:
 
 <MathBlock tex={String.raw`f = S \cdot \sum_t \sum_i \frac{f_{i,t}}{L_{i,t}}`} />
 
-Therefore, the income of LP in V3 is a double weighted summation problem of “across time + across intervals”. At each point in time and in each price range, the fee is allocated according to the LP's liquidity proportion. So the question is: Why can’t it be calculated directly on the chain according to this formula?
+Therefore, LP income in V3 is a double weighted summation across time and across intervals. At each point in time and in each price range, the fee is allocated according to the LP's liquidity proportion. So the question is: Why can’t it be calculated directly on-chain according to this formula?
 
 Because doing so means that we must traverse: all time points, all intervals in which swap has occurred, and liquidity changes corresponding to all intervals. This is obviously not feasible on-chain because the gas cost would explode.
 
-Therefore, this formula is "theoretically the most intuitive definition of fee", but it is not a truly direct implementation method in the contract. It is precisely because of this that V3 must design a set of compressed accounting methods to compress this complex sum into the `feeGrowth` mechanism to be discussed later.
+Therefore, this formula is "theoretically the most intuitive definition of fees", but it is not a direct implementation method in the contract. It is precisely because of this that V3 must design a set of compressed accounting methods to compress this complex sum into the `feeGrowth` mechanism to be discussed later.
 
 ## 3. From tick-by-tick calculation to `feeGrowth`
 
-The above formula gives a “theoretical definition” of LP returns, but it is not feasible to calculate these values ​​on a chain-by-transaction basis. Therefore, we need a method: not to record every transaction, but to record the "accumulated unit liquidity return", which is the core design of V3: `feeGrowth`.
+The above formula gives a theoretical definition of LP returns, but it is not feasible to calculate these values on-chain on a per-transaction basis. Therefore, we need a method: not to record every transaction, but to record the "accumulated unit liquidity return", which is the core design of V3: `feeGrowth`.
 
 We define `feeGrowth` as "the cumulative return per unit of liquidity":
 
@@ -210,7 +210,7 @@ It can also be expanded and written as:
 
 <MathBlock tex={String.raw`f_g = \frac{f_0}{L_0} + \frac{f_1}{L_1} + \cdots + \frac{f_N}{L_N}`} />
 
-In other words, `feeGrowth` represents "the fees earned so far per unit of liquidity." Note: What is recorded here is not the total fee, but fee / liquidity.
+In other words, `feeGrowth` represents "the fees earned so far per unit of liquidity." Note: What is recorded here is not the total fee, but fee per unit of liquidity.
 
 So how did `feeGrowth` change? Take the example in the picture below:
 
@@ -221,11 +221,11 @@ Yellow bars represent total liquidity in different tick intervals
 - The green polyline represents the process of accumulation of fees when the price crosses multiple intervals during the swap process.
 - `f₀, f₁, f₂, f₃, f₄` represents the fee fragments generated in different steps/different intervals
 
-The most important thing here is to first understand that `f0, f1, f2, f3, f4` is not a repeated fee in the same range, but an increment of fees collected by swap in different steps.
+The most important thing here is to understand that `f0, f1, f2, f3, f4` are not repeated fees in the same range, but incremental fees collected by swaps in different steps.
 
 `f0`
 
-The price just started to move, and a transaction occurred in the first step, and a fee of `f0` was charged.
+The price has just started to move, and a transaction occurs in the first step. A fee of `f0` is charged.
 The corresponding total liquidity at this time is `L0`, so its contribution to fee growth is:
 
 <MathBlock tex={String.raw`\frac{f_0}{L_0}`} />
@@ -233,7 +233,7 @@ The corresponding total liquidity at this time is `L0`, so its contribution to f
 ---
 `f1`
 
-The price continued to move in the next short path, and another transaction occurred, and a fee of `f1` was charged.
+The price continues to move along the next short path, and another transaction occurs. A fee of `f1` is charged.
 At this time, the effective liquidity of the corresponding interval is `L1`, so the contribution is:
 
 <MathBlock tex={String.raw`\frac{f_1}{L_1}`} />
@@ -241,7 +241,7 @@ At this time, the effective liquidity of the corresponding interval is `L1`, so 
 ---
 `f2`
 
-The price further enters the liquidity range marked `L₂` in the figure, and a transaction occurs within this range, and a fee of `f2` is charged.
+The price further enters the liquidity range marked `L₂` in the figure, and a transaction occurs within this range. A fee of `f2` is charged.
 Therefore the contribution of this step is:
 
 <MathBlock tex={String.raw`\frac{f_2}{L_2}`} />
@@ -249,7 +249,7 @@ Therefore the contribution of this step is:
 ---
 `f3`
 
-The price continues to advance to the next step, and the total liquidity in the corresponding range is `L₃`. At this time, a fee of `f3` is charged.
+The price continues to advance to the next step, and the total liquidity in the corresponding range is `L₃`. A fee of `f3` is charged.
 The contribution is therefore:
 
 <MathBlock tex={String.raw`\frac{f_3}{L_3}`} />
@@ -257,12 +257,12 @@ The contribution is therefore:
 ---
 `f4`
 
-Finally, the price enters the range liquidity corresponding to `L₄`, a transaction occurs again, and the fee `f4` is charged.
+Finally, the price enters the liquidity range corresponding to `L₄`, another transaction occurs, and the fee `f4` is charged.
 The contribution is therefore:
 
 <MathBlock tex={String.raw`\frac{f_4}{L_4}`} />
 
-Because `feeGrowth` is essentially a cumulative amount. It does not record the total fee of a certain swap, but records: the cumulative sum of the contributions of all steps to the "income per unit of liquidity" so far.
+Because `feeGrowth` is cumulative, it does not record the total fee from a single swap. Instead, it records the cumulative sum of the contributions of all steps to the "income per unit of liquidity" so far.
 
 So the green polyline in the picture actually expresses:
 
@@ -309,18 +309,18 @@ Then fee growth will increase:
 
 Correspondence in the figure:
 
-- In the tick 3 interval: <InlineMath tex={String.raw`f_0`} /> is generated -> fee growth increases <InlineMath tex={String.raw`\frac{f_0}{L_0}`} />
-- In the tick 4 interval: <InlineMath tex={String.raw`f_1`} /> is generated -> fee growth increases <InlineMath tex={String.raw`\frac{f_1}{L_1}`} />
-- In the tick2 interval: <InlineMath tex={String.raw`f_2`} /> is generated → fee growth increases <InlineMath tex={String.raw`\frac{f_2}{L_2}`} />
-- In the tick3 interval: <InlineMath tex={String.raw`f_3`} /> is generated → fee growth increases <InlineMath tex={String.raw`\frac{f_3}{L_3}`} />
-- In the tick4 interval: <InlineMath tex={String.raw`f_4`} /> is generated → fee growth increases <InlineMath tex={String.raw`\frac{f_4}{L_4}`} />
+- In the tick 3 interval: <InlineMath tex={String.raw`f_0`} /> is generated -> fee growth increases by <InlineMath tex={String.raw`\frac{f_0}{L_0}`} />
+- In the tick 4 interval: <InlineMath tex={String.raw`f_1`} /> is generated -> fee growth increases by <InlineMath tex={String.raw`\frac{f_1}{L_1}`} />
+- In the tick 2 interval: <InlineMath tex={String.raw`f_2`} /> is generated -> fee growth increases by <InlineMath tex={String.raw`\frac{f_2}{L_2}`} />
+- In the tick 3 interval: <InlineMath tex={String.raw`f_3`} /> is generated -> fee growth increases by <InlineMath tex={String.raw`\frac{f_3}{L_3}`} />
+- In the tick 4 interval: <InlineMath tex={String.raw`f_4`} /> is generated -> fee growth increases by <InlineMath tex={String.raw`\frac{f_4}{L_4}`} />
 
 ---
 
-#### Rule 2: fee growth is an "accumulative amount" and will not decrease
+#### Rule 2: fee growth is cumulative and will not decrease
 
-- fee growth will only increase
-- Will not be reduced due to price reversion
+- fee growth only increases
+- It is not reduced when price reverses
 
 therefore:
 
@@ -341,7 +341,7 @@ For a certain token (e.g. token Y):
 - No fee of Y
 - fee growth remains unchanged
 
-In summary, the change in fee growth can be summarized in one sentence: fee growth only increases when "charging the corresponding token fee", and remains unchanged in other cases.
+In summary, fee growth only increases when the corresponding token fee is charged, and remains unchanged in other cases.
 
 ## 4. From `feeGrowth` to `feeGrowthInside`
 
@@ -355,7 +355,7 @@ And further abstracted:
 
 We can use `feeGrowth` to represent the accumulated fees per unit of liquidity.
 
-But this is not enough. Although `feeGrowth` has compressed the complex sum of "across time + cross-range" into a cumulative amount, there is still a key problem: LP should only receive fees within its own price range. `feeGrowth` is a global accumulation, but LP only cares about the part in the [i_lower, i_upper] interval.
+But this is not enough. Although `feeGrowth` has compressed the complex sum of "across time + across ranges" into a cumulative amount, one key problem remains: an LP should only receive fees within its own price range. `feeGrowth` is a global accumulation, but an LP only cares about the part inside the [i_lower, i_upper] interval.
 
 If we calculate by traversing all historical steps, this is completely infeasible on the chain (gas explosion). Therefore, the optimization method of V3 is to use "subtraction" instead of "traversal". It will not "find the fee within the range", but use `global fee - fee outside the range`.
 
@@ -363,7 +363,7 @@ If we calculate by traversing all historical steps, this is completely infeasibl
 
 ![Diagram 20260422111413](/img/notes/pasted-image-20260422111413.png)
 
-Below we will introduce how to use the global `fee - fee outside the range` based on the picture. We must first understand three key variables:
+Based on the picture, we now derive the fee inside the range as global fee minus fee outside the range. First, we must understand three key variables:
 
 ---
 
@@ -371,7 +371,7 @@ Below we will introduce how to use the global `fee - fee outside the range` base
 
 <MathBlock tex={String.raw`f_g`} />
 
-Indicates the cumulative fee / liquidity of all steps from the beginning of the system to the present
+Indicates the cumulative fee per unit of liquidity across all steps from the beginning of the system to the present
 
 ---
 
@@ -453,18 +453,18 @@ As can be seen from the picture:
 As time progresses:
 
 - When the price is to the left of tick <InlineMath tex={String.raw`i`} />, the new fee will be calculated "below"
-- When the price is to the right of tick <InlineMath tex={String.raw`i`} />, the new fee does not fall below
+- When the price is to the right of tick <InlineMath tex={String.raw`i`} />, the new fee does not count as "below"
 
-Therefore, <InlineMath tex={String.raw`f_b(i)`} /> is essentially the accumulation of all fees that occur below tick <InlineMath tex={String.raw`i`} />. However, there is a core problem here, the price will move back and forth on either side of tick <InlineMath tex={String.raw`i`} />.
+Therefore, <InlineMath tex={String.raw`f_b(i)`} /> is essentially the accumulation of all fees that occur below tick <InlineMath tex={String.raw`i`} />. However, there is a core problem here: the price moves back and forth on either side of tick <InlineMath tex={String.raw`i`} />.
 
 This means:
 
-- Some fees belong below at some point
-- But if the price crosses the tick, the "attribution direction" of these fees will change
+- Some fees are classified as below at one point in time
+- But if the price crosses the tick, the attribution of those fees changes
 
 Therefore, <InlineMath tex={String.raw`f_b(i)`} /> is not a quantity that can be simply "linearly accumulated".
 
-If we expand according to time, at different points in time:
+If we expand this over time, at different time points:
 
 <MathBlock tex={String.raw`t_0 < t_1 < t_2 < t_3 < t_4`} />
 
@@ -540,28 +540,28 @@ Summarize:
 - No crossing:
 Just continue to accumulate new fee growth (± <InlineMath tex={String.raw`fg_k`} />)
 
-So the overall performance is:
+So the overall pattern is:
 
 <MathBlock tex={String.raw`f_b(t)
 
 =
 f_{g0} - f_{g1} + f_{g2} - f_{g3} + \cdots`} />
 
-That is, a sign flip occurs every tick crossing. But in actual implementation, V3 does not calculate according to this formula, but maintains this result through status updates.
+That is, the sign flips at every tick crossing. In actual implementation, V3 does not calculate this formula directly; it maintains the result through state updates.
 
-Because if we calculate below on the chain according to this definition, we will need to traverse all historical swaps. But this is not feasible in practice as the gas will explode.
+Because calculating `fee_below` on-chain from this definition would require traversing all historical swaps, which is not feasible in practice because gas costs would explode.
 
-In order to solve the problem that above / below cannot be calculated directly, V3 introduces a key variable:
+To avoid calculating above / below directly, V3 introduces a key variable:
 
 <MathBlock tex={String.raw`f_o(i)`} />
 
-set up:
+Define:
 
 <MathBlock tex={String.raw`i_c = \text{current price tick}`} />
 
-Among them, <InlineMath tex={String.raw`i_c`} /> represents the tick where the current price is.
+Here, <InlineMath tex={String.raw`i_c`} /> represents the tick at the current price.
 
-but:
+then:
 
 <MathBlock tex={String.raw`f_b(i) =
 
@@ -570,7 +570,7 @@ f_o(i), & i \le i_c \\
 f_g - f_o(i), & i_c < i
 \end{cases}`} />
 
-Therefore, V3 does not directly store `fee growth below`, but instead stores an easier-to-update quantity `feeGrowthOutside` on each tick. Later, based on the position of the current price relative to tick <InlineMath tex={String.raw`i`} />, it recovers: <InlineMath tex={String.raw`f_b(i)`} /> and <InlineMath tex={String.raw`f_a(i)`} />. Next, we will continue the introduction of <InlineMath tex={String.raw`f_a(i)`} />.
+Therefore, V3 does not directly store `fee growth below`; instead, it stores `feeGrowthOutside` on each tick, which is easier to update. Later, based on the current price position relative to tick <InlineMath tex={String.raw`i`} />, it recovers <InlineMath tex={String.raw`f_b(i)`} /> and <InlineMath tex={String.raw`f_a(i)`} />. Next, we continue with <InlineMath tex={String.raw`f_a(i)`} />.
 
 ## 6. Fee Growth Above
 
@@ -592,16 +592,16 @@ As time progresses:
 
 Therefore, <InlineMath tex={String.raw`f_a(i)`} /> is essentially the accumulation of all fees that occurred above tick <InlineMath tex={String.raw`i`} />.
 
-Same as below:
+As with below:
 
 - price crossing tick i
 - The ownership of "above/below" will be flipped
 
 Therefore, <InlineMath tex={String.raw`f_a(i)`} /> is not a quantity that can be simply accumulated linearly.
 
-Observe patterns from time (only for understanding)
+Observe the pattern over time (for intuition only)
 
-set up:
+Define:
 
 <MathBlock tex={String.raw`t_0 < t_1 < t_2 < t_3 < t_4`} />
 
@@ -652,21 +652,21 @@ From these expansions it can be observed:
 - Same as below, a sign flip occurs every tick crossing
 - When not crossing, just continue to accumulate
 
-Therefore, these expansions are only used to help understand the "flip mechanism". The actual calculation will not use these expressions, but use feeGrowthOutside to represent above.
+These expansions only help explain the flip mechanism. The actual calculation does not use these expressions; it uses `feeGrowthOutside` to represent the above side.
 
 We have defined:
 
 <MathBlock tex={String.raw`f_o(i)`} />
 
-Represents `feeGrowthOutside` recorded on tick
+It represents `feeGrowthOutside` recorded on the tick.
 
-set up:
+Define:
 
 <MathBlock tex={String.raw`i_c = \text{current price tick}`} />
 
-Among them, <InlineMath tex={String.raw`i_c`} /> represents the tick where the current price is.
+Here, <InlineMath tex={String.raw`i_c`} /> represents the tick at the current price.
 
-but:
+then:
 
 <MathBlock tex={String.raw`f_a(i) =
 
@@ -675,14 +675,14 @@ f_g - f_o(i), & i \le i_c \\
 f_o(i), & i_c < i
 \end{cases}`} />
 
-Therefore, the above is not an independently designed quantity, but is restored by feeGrowthOutside + current price position. Below / above are essentially two perspectives of the same thing, and when crossing occurs, it will cause "attribution flip". In addition, V3 does not exist below / above, only <InlineMath tex={String.raw`f_o(i)`} />. and recover via current price positions: <InlineMath tex={String.raw`f_b(i)`} /> and <InlineMath tex={String.raw`f_a(i)`} />
+Therefore, the above is not an independently designed quantity, but is restored by `feeGrowthOutside` plus the current price position. Below / above are essentially two perspectives of the same thing, and when crossing occurs, the attribution flips. In addition, V3 does not store separate below / above values; it only stores <InlineMath tex={String.raw`f_o(i)`} />, and recovers them from the current price position as <InlineMath tex={String.raw`f_b(i)`} /> and <InlineMath tex={String.raw`f_a(i)`} />.
 
 ## 7. Initialization and update of `feeGrowthOutside`
 
-In the previous section we have seen:
+In the previous section, we saw:
 
 - Neither `feeGrowthBelow` nor `feeGrowthAbove` are simple linear accumulators
-- They undergo "vesting flips" as the price crosses ticks
+- They undergo flips as the price crosses ticks
 - If maintained directly according to historical definitions, all historical swaps need to be traversed on the chain, and the gas cost is unacceptable.
 
 Therefore, V3 does not store directly:
@@ -694,16 +694,16 @@ Instead, for each initialized tick, store a state variable that is easier to mai
 
 <MathBlock tex={String.raw`f_{out,i}`} />
 
-Represents `feeGrowthOutside` recorded at tick `i`. The core function of this variable is to use a state quantity to compress and encode the "flip history" after the price crosses the tick multiple times. Therefore, we do not directly calculate <InlineMath tex={String.raw`f_b(i),\quad f_a(i)`} /> later.
+It represents `feeGrowthOutside` recorded at tick `i`. The core function of this variable is to use a state quantity to compress and encode the "flip history" after the price crosses the tick multiple times. Therefore, we do not directly calculate <InlineMath tex={String.raw`f_b(i),\quad f_a(i)`} /> later.
 
 ### 7.1 Initialization rules
 
-When a tick i is first initialized, we need to decide which fees are currently "outside".
+When tick <InlineMath tex={String.raw`i`} /> is first initialized, we need to decide which fees are currently "outside".
 
-Assume that the tick where the current price is located is <InlineMath tex={String.raw`i_c`} />, then:
+Assume that the current price is at tick <InlineMath tex={String.raw`i_c`} />, then:
 
 - If <InlineMath tex={String.raw`i \le i_c`} /> (tick is to the left of current price)
-- outside = the part on the left
+- outside = the left side
 - so:
 
 <MathBlock tex={String.raw`f_{out,i} = f_g`} />
@@ -719,7 +719,7 @@ When price crosses tick i:
 - The original outside area becomes inside
 - The original inside area becomes outside
 
-The definition of outside is "flipped" and deduced according to the previous:
+The outside definition flips when the price crosses the tick:
 
 <MathBlock tex={String.raw`f_{new} = f_g - f_{old}`} />
 
@@ -727,12 +727,12 @@ therefore:
 
 <MathBlock tex={String.raw`f_{out,i} = f_g - f_{out,i}`} />
 
-This means <InlineMath tex={String.raw`f_{out,i}`} /> is already implicitly logged:
+This means <InlineMath tex={String.raw`f_{out,i}`} /> already implicitly records:
 
 - Fee accumulation on the left/right side of the tick
 - and the "flip result" after multiple crossings
 
-The next thing we need to do is restore with <InlineMath tex={String.raw`f_{out,i}`} />:
+Next, we use <InlineMath tex={String.raw`f_{out,i}`} /> to recover:
 
 <MathBlock tex={String.raw`f_b(i), \quad f_a(i)`} />
 
@@ -955,9 +955,9 @@ Since both ticks are uninitialized:
 Assumptions:
 
 - <InlineMath tex={String.raw`i_{lower}`} /> has been crossed (in <InlineMath tex={String.raw`t_1`} />)
-- <InlineMath tex={String.raw`i_{upper}`} /> Not worn yet
+- <InlineMath tex={String.raw`i_{upper}`} /> has not been crossed yet
 
-but:
+then:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_{g0}, \quad f_{out,i_{upper}} = 0`} />
 
@@ -990,7 +990,7 @@ Assumptions:
 - <InlineMath tex={String.raw`i_{lower}`} /> is initialized before <InlineMath tex={String.raw`t_0`} />
 - <InlineMath tex={String.raw`i_{upper}`} /> is crossed at <InlineMath tex={String.raw`t_1`} />
 
-but:
+then:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_{g0}, \quad f_{out,i_{upper}} = f_{g1}`} />
 
@@ -1008,7 +1008,7 @@ Regardless of the current price's position relative to the range (left/inside/ri
 
 <MathBlock tex={String.raw`F_k - F_0 = f_{g,k} - f_{g,\text{entry}}`} />
 
-- Before tick is initialized, the interval boundary does not form a "division"
+- Before the tick is initialized, the interval boundary does not form a division
 - So fee growth will not be assigned to outside
 - Fee accumulation in the entire interval is equivalent to changes in global fee growth
 
@@ -1111,7 +1111,7 @@ At some point <InlineMath tex={String.raw`t_2`} />
 at this time:
 
 - <InlineMath tex={String.raw`i_{lower}`} /> has been passed through (or is already on the left)
-- <InlineMath tex={String.raw`i_{upper}`} /> has not been touched yet
+- <InlineMath tex={String.raw`i_{upper}`} /> has not been crossed yet
 
 therefore:
 

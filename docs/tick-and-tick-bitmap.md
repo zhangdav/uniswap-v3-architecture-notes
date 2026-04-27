@@ -9,7 +9,7 @@ import MathBlock from '@site/src/components/MathBlock';
 
 ## Overview
 
-In Uniswap V3, the number of `tick` is very large (≈ 1.7M), but the number of `tick` actually used is very small (sparse). Therefore, all ticks cannot be stored directly. Instead, an efficient data structure is needed to quickly determine whether the tick has been initialized and to quickly find the next initialized tick. For this reason, tickBitmap is introduced.
+In Uniswap V3, the number of possible `tick` values is very large (about 1.7 million), but the number of ticks actually used is very small and sparse. Therefore, all ticks cannot be stored directly. Instead, an efficient data structure is needed to quickly determine whether a tick has been initialized and to quickly find the next initialized tick. For this reason, `tickBitmap` is introduced.
 
 ### 1. Data structure of TickBitmap
 
@@ -22,12 +22,12 @@ The essence of `tickBitmap` is:
 meaning:
 
 - key (int16): represents a 256 tick block number (word)
-- value (uint256): Indicates whether the status of 256 ticks in this block is initialized
+- value (`uint256`): indicates whether any of the 256 ticks in this block are initialized
 
-Everyone:
+Values:
 
-- 1: The tick has been initialized
-- 0: not initialized
+- `1`: the tick has been initialized
+- `0`: not initialized
 
 For example:
 
@@ -41,10 +41,10 @@ word = -1  → ticks [-256 ~ -1]
 
 ```
 
-A tick will be split into two parts:
+A tick is split into two parts:
 
-- `word position`: Indicates which `uint256` word it falls in
-- `bit position`: indicates the number of this word
+- `word position`: indicates which `uint256` word it falls in
+- `bit position`: indicates the bit offset within that word
 
 That is:
 
@@ -72,13 +72,13 @@ mapping(int16 => uint256) public tickBitmap;
 
 ```
 
-Because of one `uint256 = 256 bits`, one `uint256` can be used to store the initialization status of 256 ticks. In this way, bit operations can be used to quickly find whether the current tick is initialized, the most recent initialization tick on the left, or the most recent initialization tick on the right.
+Because one `uint256` equals 256 bits, a single `uint256` can be used to store the initialization status of 256 ticks. In this way, bit operations can be used to quickly find whether the current tick is initialized, the nearest initialized tick on the left, or the nearest initialized tick on the right.
 
 ### 2. How Tick is mapped to Bitmap (core)
 
 #### 2.1 TickSpacing and effective Tick
 
-The pool does not use all ticks, but only allows integer multiples of `tickSpacing` as valid ticks, for example:
+The pool does not use all ticks. It only allows integer multiples of `tickSpacing` as valid ticks. For example:
 
 - When `tickSpacing = 1`, all ticks may be valid
 - When `tickSpacing = 10`, only these ticks `..., -20, -10, 0, 10, 20,...` may be initialized
@@ -192,7 +192,7 @@ tickBitmap[-784] |= (1 << 7); // tick = -200697 has been initialized and stored 
 
 ![Diagram 20260403155323](/img/notes/pasted-image-20260403155323.png)
 
-It should be noted here that not any tick can be written to the TickBitmap. Only ticks that meet the previous condition `tick % tickSpacing ** 0` are legal initializable ticks.
+It should be noted here that not every tick can be written to the TickBitmap. Only ticks that satisfy `tick % tickSpacing == 0` are valid initializable ticks.
 
 Similarly, if you want to determine whether `tick = -200697` is initialized from the bitmap, you need to find the 7th bit in the uint256 `tickBitmap[-784]` through bit operations and check whether the 7th bit is 1.
 
@@ -200,12 +200,12 @@ Similarly, if you want to determine whether `tick = -200697` is initialized from
 
 In V3, when the initialization status of a certain tick changes, `flipTick` needs to be used to switch the initialization status of a certain tick.
 
-Flip will only be triggered in the following two situations:
+Flip is triggered only in the following two situations:
 
 1. When a tick is initialized for the first time (liquidity changes from 0 → non-0)
-2. When a tick is completely cleared (liquidity changes from non-0 → 0)
+2. When a tick is completely cleared (liquidity changes from non-zero to 0)
 
-In other words, it will flip only when the state of 0 ↔ is non-0. It is implemented through XOR, because XOR can switch between 0 and 1, avoiding additional judgment of the current state, and the gas is lower.
+In other words, it flips only when the state changes between 0 and non-zero. It is implemented with XOR because XOR can switch between 0 and 1 without checking the current state again, which saves gas.
 
 ![Diagram 20260403155802](/img/notes/pasted-image-20260403155802.png)
 

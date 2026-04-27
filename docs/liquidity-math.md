@@ -9,15 +9,15 @@ import MathBlock from '@site/src/components/MathBlock';
 
 ## Overview
 
-In the overview of the Uniswap V3 protocol, we understand the core ideas of V3 from a macro perspective, including:
+In the overview of the Uniswap V3 protocol, we understood the core ideas of V3 from a macro perspective, including:
 
 - Liquidity is no longer distributed across the price range <InlineMath tex={String.raw`(0, \infty)`} />
 - but concentrated in a limited interval <InlineMath tex={String.raw`[p_{\text{lower}}, p_{\text{upper}}]`} />
-- And by introducing virtual liquidity, the local curve still satisfies the constant product relationship
+- By introducing virtual liquidity, the local curve still satisfies the constant product relationship
 
 <MathBlock tex={String.raw`(x_R + x_V)(y_R + y_V) = L^2`} />
 
-However, this expression remains static. During real trading, prices will continue to change, and how does liquidity affect prices? How does the quantity of an asset change with price?  These problems require more precise mathematical description.
+However, this expression remains static. During real trading, prices continue to change, so how does liquidity affect prices? How does the quantity of an asset change with price? These questions require a more precise mathematical description.
 
 This chapter starts from the perspective of `Liquidity` and systematically answers the following key questions:
 
@@ -25,9 +25,9 @@ This chapter starts from the perspective of `Liquidity` and systematically answe
 
 When the price <InlineMath tex={String.raw`P`} /> is in different ranges:
 
-- <InlineMath tex={String.raw`P < p_{\text{lower}}`} />: only holds token0
-- <InlineMath tex={String.raw`p_{\text{lower}} < P < p_{\text{upper}}`} />: Bilateral assets
-- <InlineMath tex={String.raw`P > p_{\text{upper}}`} />: only holds token1
+- <InlineMath tex={String.raw`P < p_{\text{lower}}`} />: holds only token0
+- <InlineMath tex={String.raw`p_{\text{lower}} < P < p_{\text{upper}}`} />: holds both assets
+- <InlineMath tex={String.raw`P > p_{\text{upper}}`} />: holds only token1
 
 We will derive in different states:
 
@@ -35,7 +35,7 @@ We will derive in different states:
 
 ### 2. Global liquidity and interval liquidity
 
-- global liquidity (effective liquidity at current price)
+- global liquidity (effective liquidity at the current price)
 - liquidity net (change across ticks)
 
 Understand why liquidity is "segmented".
@@ -52,11 +52,11 @@ Understand why liquidity is "segmented".
 - How to deduce the number of tokens based on <InlineMath tex={String.raw`L`} />
 - The relationship between <InlineMath tex={String.raw`L`} /> and price
 
-Through this chapter, we will establish a complete understanding that price changes in Uniswap V3 are essentially driven by liquidity.  These formulas will be used repeatedly as the basis when analyzing tick, swap, fee calculation and other mechanisms later.
+Through this chapter, we will establish a complete understanding that price changes in Uniswap V3 are essentially driven by liquidity. These formulas will be used repeatedly as the basis for later analysis of ticks, swaps, fee calculation, and other mechanisms.
 
 ## 1. Asset status at different price positions
 
-In Uniswap V3, the liquidity provided by LP only takes effect within the interval <InlineMath tex={String.raw`[p_{\text{lower}}, p_{\text{upper}}]`} />.  As the price <InlineMath tex={String.raw`P`} /> changes, the asset structure held by LP will change.
+In Uniswap V3, the liquidity provided by an LP only takes effect within the interval <InlineMath tex={String.raw`[p_{\text{lower}}, p_{\text{upper}}]`} />. As the price <InlineMath tex={String.raw`P`} /> changes, the asset structure held by the LP changes as well.
 
 ![Diagram 20260331203007](/img/notes/pasted-image-20260331203007.png)
 
@@ -64,7 +64,7 @@ In Uniswap V3, the liquidity provided by LP only takes effect within the interva
 
 ![Diagram 20260331203024](/img/notes/pasted-image-20260331203024.png)
 
-At this point, price has completely crossed the LP range.
+At this point, the price has completely crossed the LP range.
 
 It can be observed:
 
@@ -75,13 +75,13 @@ Right now:
 
 <MathBlock tex={String.raw`x_R = 0, \quad y_R > 0`} />
 
-LP's token0 has all been sold and replaced by token1
+The LP's token0 has been fully sold and replaced by token1.
 
 ### 1.2 When <InlineMath tex={String.raw`P < p_{\text{lower}}`} /> (price is below the range)
 
 ![Diagram 20260331203042](/img/notes/pasted-image-20260331203042.png)
 
-At this time, the price leaves the LP market making range.
+At this time, the price leaves the LP's market-making range.
 
 It can be observed:
 
@@ -92,7 +92,7 @@ Right now:
 
 <MathBlock tex={String.raw`x_R > 0, \quad y_R = 0`} />
 
-From the curve point of view, the status point stays at the left boundary of the interval at this time. What LP provides is “token0 waiting to be bought”
+From the curve's point of view, the state point stays at the left boundary of the interval. What the LP provides is token0 waiting to be bought.
 
 ### 1.3 When <InlineMath tex={String.raw`p_{\text{lower}} < P < p_{\text{upper}}`} /> (price is within the range)
 
@@ -109,7 +109,7 @@ Right now:
 
 <MathBlock tex={String.raw`x_R > 0, \quad y_R > 0`} />
 
-and satisfy:
+and satisfies:
 
 <MathBlock tex={String.raw`(x_R + x_V)(y_R + y_V) = L^2`} />
 
@@ -122,7 +122,7 @@ p_{\text{lower}} < P < p_{\text{upper}} & \Rightarrow (x_R > 0, \; y_R > 0) \\
 P > p_{\text{upper}} & \Rightarrow (x_R = 0, \; y_R > 0)
 \end{cases}`} />
 
-Liquidity is not "providing two assets at the same time", but constantly switching between token0 and token1 as the price changes. The movement of price is essentially the redistribution process of LP assets between X and Y.
+Liquidity is not "providing two assets at the same time", but constantly switching between token0 and token1 as the price changes. Price movement is essentially the redistribution of LP assets between X and Y.
 
 ## 2. Global liquidity and interval liquidity
 

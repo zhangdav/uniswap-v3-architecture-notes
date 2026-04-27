@@ -9,17 +9,17 @@ import MathBlock from '@site/src/components/MathBlock';
 
 ## Overview
 
-On-chain, we need a price:
+On-chain, we need a price that is:
 
 - Resistant to manipulation (not easily affected by flash loans)
 - Reflects the true price over a period of time
 - Does not rely on off-chain records
 
-So time weighted prices are introduced:
+So time-weighted average prices are introduced:
 
 <MathBlock tex={String.raw`\text{TWAP (Time Weighted Average Price)}`} />
 
-V2’s approach is achieved by accumulating prices:
+V2's approach is to accumulate prices:
 
 <MathBlock tex={String.raw`a(t) = a(t-1) + price \cdot \Delta t`} />
 
@@ -27,7 +27,7 @@ Query range price:
 
 <MathBlock tex={String.raw`p(t_1,t_2) = \frac{a(t_2) - a(t_1)}{t_2 - t_1}`} />
 
-The core improvement of V3 is that it no longer records price directly, but records:
+The key improvement in V3 is that it no longer records price directly, but records:
 
 <MathBlock tex={String.raw`tick = \log_{1.0001}(price)`} />
 
@@ -35,15 +35,15 @@ therefore:
 
 <MathBlock tex={String.raw`price = 1.0001^{tick}`} />
 
-The essential change is to convert <InlineMath tex={String.raw`price \cdot \Delta t`} /> into <InlineMath tex={String.raw`tick \cdot \Delta t`} />
+The essential change is to convert <InlineMath tex={String.raw`price \cdot \Delta t`} /> into <InlineMath tex={String.raw`tick \cdot \Delta t`} />.
 
-use:
+using:
 
 <MathBlock tex={String.raw`\log(p_1 \cdot p_2) = \log p_1 + \log p_2`} />
 
 ## 1. tickCumulative (core accumulator)
 
-definition:
+Definition:
 
 <MathBlock tex={String.raw`tickCumulative(t) = \sum tick \cdot \Delta t`} />
 
@@ -71,7 +71,7 @@ Given two points in time:
 
 ## 3. Why use tick(log)
 
-geometric mean
+Geometric mean
 
 <MathBlock tex={String.raw`\log(p_1) + \log(p_2) = \log(p_1 \cdot p_2)`} />
 
@@ -81,13 +81,13 @@ Corresponding price relationship
 
 ## 4. Observation (historical snapshot)
 
-V3 stores the status of multiple time points on the chain, and each record contains:
+V3 stores the state of multiple time points on-chain, and each record contains:
 
 - timestamp
 - tickCumulative
 - secondsPerLiquidityCumulative
 
-Each Observation represents a "snapshot of the accumulator at some point in time".
+Each observation represents a snapshot of the accumulator at a point in time.
 
 ## 5. secondsPerLiquidity Oracle
 
@@ -95,9 +95,9 @@ definition:
 
 <MathBlock tex={String.raw`secondsPerLiquidityCumulative = \sum \frac{\Delta t}{liquidity}`} />
 
-meaning
+Meaning:
 
-Indicates the time when unit liquidity participates in market making.
+Indicates the time during which one unit of liquidity participates in market making.
 
 - The greater the liquidity → the less time it takes to distribute units
 - The smaller the liquidity → the more time units will be allocated
@@ -112,7 +112,7 @@ calculate:
 
 <MathBlock tex={String.raw`TWAP = \frac{tickCumulative(t_2) - tickCumulative(t_1)}{t_2 - t_1}`} />
 
-A unified perspective with the Fee system
+A unified perspective with the fee system
 
 Fee system:
 

@@ -9,21 +9,21 @@ import MathBlock from '@site/src/components/MathBlock';
 
 ## Overview
 
-In Uniswap V3, the price is no longer directly determined by the reserve ratio like V2, but is split into two layers of representation, one for the discrete index `tick` and the other for the precise calculation of `sqrtPriceX96`.
+In Uniswap V3, price is no longer determined directly by the reserve ratio as in V2. Instead, it is represented on two levels: the discrete index `tick` and the precise on-chain value `sqrtPriceX96`.
 
-This design allows prices to be efficiently indexed (for range liquidity management) and calculated with high precision on-chain.
+This design allows prices to be indexed efficiently for range liquidity management and calculated with high precision on-chain.
 
 This chapter will focus on these two representations and elaborate on three core issues:
 
-1. Why do we need to use tick to represent prices (discretization)
-2. How tickSpacing controls price accuracy and system complexity
-3. Why is the actual price stored on the chain sqrtPriceX96, not price or tick?
+1. Why use tick to represent prices
+2. How tickSpacing controls price precision and system complexity
+3. Why the actual price stored on-chain is `sqrtPriceX96`, not `price` or `tick`
 
 Through this chapter, we will establish a complete price representation system:
 
 <MathBlock tex={String.raw`\text{price} \leftrightarrow \text{tick} \leftrightarrow \text{sqrtPriceX96}`} />
 
-Lay the foundation for understanding liquidity calculations, as well as subsequent swap processes and cross-tick behavior.
+This lays the foundation for understanding liquidity calculations, as well as subsequent swap processes and cross-tick behavior.
 
 ## 1. Tick
 
@@ -40,9 +40,9 @@ At the same time, a constant product is satisfied:
 
 <MathBlock tex={String.raw`x \cdot y = k`} />
 
-This method of price equaling reserve ratio is very simple, and the price and reserve can change continuously. However, it cannot discretely manage prices, nor can it efficiently manage interval liquidity, nor can it perform interval indexing on the chain.
+This method of equating price with the reserve ratio is very simple, and prices and reserves can change continuously. However, it cannot manage prices discretely, cannot efficiently manage interval liquidity, and cannot perform interval indexing on-chain.
 
-In order to solve the above problems, `tick` was introduced in V3 so that the price is no longer a continuous reserve, but a discretized index:
+To solve these problems, `tick` was introduced in V3 so that price is no longer represented as a continuous reserve ratio, but as a discretized index:
 
 <MathBlock tex={String.raw`P = 1.0001^{\text{tick}}`} />
 
@@ -68,11 +68,11 @@ Output result:
 
 Represents 1 ETH ≈ 1924 USDC
 
-This method allows each `tick` to correspond to a price, and `tick` is the `log` representation (index coordinate) of the price. This way prices are linear in `log` space.
+This method allows each `tick` to correspond to a price, and `tick` is the logarithmic representation of the price. In this way, prices are linear in log space.
 
 <MathBlock tex={String.raw`\text{tick} = \log_{1.0001}(P)`} />
 
-So the essence of `tick` is the integer index of price in logarithmic space. The introduction of `tick` allows prices to be discretely indexed, liquidity can be stored in intervals, and bitmaps can also be used for efficient searches.
+So the essence of `tick` is the integer index of price in logarithmic space. Introducing `tick` allows prices to be indexed discretely, liquidity to be stored in intervals, and bitmaps to be used for efficient searches.
 
 From V2 to V3, an essential change is:
 
@@ -81,7 +81,7 @@ From V2 to V3, an essential change is:
 
 ## 2. TickSpacing
 
-In Uniswap V3, not all ticks can be used. tickSpacing is the "step constraint" on ticks, which determines which ticks are available.
+In Uniswap V3, not all ticks can be used. `tickSpacing` is the step constraint on ticks and determines which ticks are available.
 
 <MathBlock tex={String.raw`tick \in \{ ..., -2s, -s, 0, s, 2s, ... \}`} />
 
@@ -91,33 +91,33 @@ For example when tickSpacing = 2:
 
 ![Diagram 20260403095909](/img/notes/pasted-image-20260403095909.png)
 
-Only the green dotted line `tick` can be initialized for liquidity, other ticks are not allowed to initialize liquidity. So tickSpacing is essentially a control over the discrete precision of prices.
+Only the green dotted-line ticks can be initialized with liquidity; other ticks are not allowed. So `tickSpacing` is essentially a control over the discrete precision of prices.
 
 In the contract, tickSpacing directly determines the total number of ticks in the system:
 
 <MathBlock tex={String.raw`\text{numTicks} = \frac{\text{maxTick} - \text{minTick}}{\text{tickSpacing}} + 1`} />
 
-The smaller the tickSpacing is:
+The smaller `tickSpacing` is:
 
 - The ticks are denser
 - The larger the numTicks
 - The greater the number of states
 - The higher the gas cost
 
-The bigger the tickSpacing is:
+The larger `tickSpacing` is:
 
 - The ticks are sparser
 - The smaller the numTicks
 - The lower the gas cost
 
-therefore:
+Therefore:
 
-The essence of tickSpacing is to do a trade-off:
+The essence of `tickSpacing` is to make a trade-off between:
 
 - Accuracy (price granularity)
 - gas cost (state size)
 
-In Uniswap V3, tickSpacing is determined by the fee tier, is fixed when the pool is created, and cannot be modified.
+In Uniswap V3, `tickSpacing` is determined by the fee tier, is fixed when the pool is created, and cannot be modified.
 
 | Fee Tier | TickSpacing |
 |----------|------------|
@@ -154,11 +154,11 @@ We already know before:
 
 <MathBlock tex={String.raw`P = 1.0001^{\text{tick}}`} />
 
-But in the actual contract, Uniswap V3 does not directly store `price` floating point numbers. Because Solidity does not support floating point numbers, you need to use integers to represent prices. <InlineMath tex={String.raw`Q96 = 2^{96}`} /> is a fixed-point representation:
+But in the actual contract, Uniswap V3 does not directly store floating-point `price` values. Because Solidity does not support floating-point numbers, it uses integers to represent prices. <InlineMath tex={String.raw`Q96 = 2^{96}`} /> is a fixed-point scaling factor:
 
 <MathBlock tex={String.raw`\text{sqrtPriceX96} = \sqrt{P} \cdot 2^{96}`} />
 
-This can maintain high accuracy within the integer range, and the price can also be deduced from sqrtPriceX96:
+This maintains high accuracy within the integer range, and price can also be derived from `sqrtPriceX96`:
 
 <MathBlock tex={String.raw`P = \left(\frac{\text{sqrtPriceX96}}{2^{96}}\right)^2`} />
 
