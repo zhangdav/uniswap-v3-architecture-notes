@@ -165,12 +165,17 @@ P > p_{\text{upper}} & \Rightarrow (x_R = 0, \; y_R > 0)
 - 在同一个价格区间内，流动性会累加
 - 在边界处，流动性会发生跳变
 
-<InlineMath tex={String.raw`p0:`} /> `liquidity` 为初始值，<InlineMath tex={String.raw`L = 0`} />
-<InlineMath tex={String.raw`p1:`} />  价格上涨，进入第一个流动性区间，开始添加 `liquidityNet`， <InlineMath tex={String.raw`L + 100 = 0 + 100 = 100`} />
-<InlineMath tex={String.raw`p2:`} />  价格继续往右移动，进入第二个区间，继续添加 `liquidityNet`，<InlineMath tex={String.raw`L + 150 = 100 + 150 = 250`} />
-<InlineMath tex={String.raw`p3:`} />  价格离开第二区间，`liquidity`移除对应区间`liquidityNet`，<InlineMath tex={String.raw`L - 150 = 250 - 150 = 100`} />
-<InlineMath tex={String.raw`p4:`} />  价格离开第一区间，`liquidity`移除对应区间`liquidityNet`，<InlineMath tex={String.raw`L - 100 = 100 - 100 = 0`} />
-<InlineMath tex={String.raw`p5:`} /> `liquidity`离开所有区间，价格上涨到 <InlineMath tex={String.raw`p5`} /> 该价格未初始化，`liquidity`为0
+- <InlineMath tex={String.raw`p0:`} /> liquidity 为初始值，<InlineMath tex={String.raw`L = 0`} />
+
+- <InlineMath tex={String.raw`p1:`} /> 价格上涨，进入第一个流动性区间，开始添加 `liquidityNet`，<InlineMath tex={String.raw`L + 100 = 100`} />
+
+- <InlineMath tex={String.raw`p2:`} /> 继续移动，进入第二个区间，<InlineMath tex={String.raw`L + 150 = 250`} />
+
+- <InlineMath tex={String.raw`p3:`} /> 离开第二个区间，<InlineMath tex={String.raw`L - 150 = 100`} />
+
+- <InlineMath tex={String.raw`p4:`} /> 离开第一个区间，<InlineMath tex={String.raw`L - 100 = 0`} />
+
+- <InlineMath tex={String.raw`p5:`} /> 离开所有区间，liquidity = 0
 
 因此，流动性是由一组分布在 price（`tick`） 上的 `liquidityNet` 决定。当价格 <InlineMath tex={String.raw`P`} /> 发生变化时，Pool 的行为可以抽象为在 tick 轴上沿价格方向进行一次扫描，并逐个应用 `liquidityNet`。
 
@@ -459,11 +464,11 @@ Token 数量公式就是真实储备公式在不同价格区间的展开。
 
 ## 5. 流动性变化与 Token 的关系（<InlineMath tex={String.raw`ΔL`} />）
 
-<InlineMath tex={String.raw`L_0 = Liquidity before`} />
+- <InlineMath tex={String.raw`L_0 = Liquidity before`} />
 
-<InlineMath tex={String.raw`L_1 = Liquidity after`} />
+- <InlineMath tex={String.raw`L_1 = Liquidity after`} />
 
-<InlineMath tex={String.raw`\Delta L = L_1 - L_0`} />
+- <InlineMath tex={String.raw`\Delta L = L_1 - L_0`} />
 
 ---
 

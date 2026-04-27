@@ -165,12 +165,32 @@ When multiple positions overlap:
 - Within the same price range, liquidity will accumulate
 - At borders, liquidity jumps
 
-<InlineMath tex={String.raw`p0:`} /> `liquidity` is the initial value, <InlineMath tex={String.raw`L = 0`} />
-The price of <InlineMath tex={String.raw`p1:`} /> rises, enters the first liquidity interval, and begins to add `liquidityNet`, <InlineMath tex={String.raw`L + 100 = 0 + 100 = 100`} />
-The price of <InlineMath tex={String.raw`p2:`} /> continues to move to the right, entering the second interval, and continues to add `liquidityNet`, <InlineMath tex={String.raw`L + 150 = 100 + 150 = 250`} />
-<InlineMath tex={String.raw`p3:`} /> price leaves the second range, `liquidity` removes the corresponding range `liquidityNet`, <InlineMath tex={String.raw`L - 150 = 250 - 150 = 100`} />
-<InlineMath tex={String.raw`p4:`} /> price leaves the first range, `liquidity` removes the corresponding range `liquidityNet`, <InlineMath tex={String.raw`L - 100 = 100 - 100 = 0`} />
-<InlineMath tex={String.raw`p5:`} /> `liquidity` leaves all ranges and the price rises to <InlineMath tex={String.raw`p5`} /> The price is not initialized and `liquidity` is 0
+- <InlineMath tex={String.raw`p_0:`} />  
+  liquidity is initialized as <InlineMath tex={String.raw`L = 0`} />
+
+- <InlineMath tex={String.raw`p_1:`} />  
+  the price increases and enters the first interval,  
+  liquidity starts to add `liquidityNet`:  
+  <InlineMath tex={String.raw`L = 0 + 100 = 100`} />
+
+- <InlineMath tex={String.raw`p_2:`} />  
+  the price continues to move right and enters the second interval,  
+  liquidity keeps adding `liquidityNet`:  
+  <InlineMath tex={String.raw`L = 100 + 150 = 250`} />
+
+- <InlineMath tex={String.raw`p_3:`} />  
+  the price leaves the second interval,  
+  liquidity removes the corresponding `liquidityNet`:  
+  <InlineMath tex={String.raw`L = 250 - 150 = 100`} />
+
+- <InlineMath tex={String.raw`p_4:`} />  
+  the price leaves the first interval,  
+  liquidity removes the corresponding `liquidityNet`:  
+  <InlineMath tex={String.raw`L = 100 - 100 = 0`} />
+
+- <InlineMath tex={String.raw`p_5:`} />  
+  liquidity leaves all intervals, and the price moves to an uninitialized region,  
+  so liquidity remains 0
 
 Therefore, liquidity is determined by a set of `liquidityNet` distributed over price (`tick`). When the price <InlineMath tex={String.raw`P`} /> changes, the behavior of the Pool can be abstracted as scanning along the price direction on the tick axis and applying `liquidityNet` one by one.
 
@@ -459,11 +479,11 @@ The token calculation formula is just the specific manifestation of this relatio
 
 ## 5. The relationship between liquidity changes and Token (<InlineMath tex={String.raw`ΔL`} />)
 
-<InlineMath tex={String.raw`L_0 = Liquidity before`} />
+- <InlineMath tex={String.raw`L_0 = Liquidity before`} />
 
-<InlineMath tex={String.raw`L_1 = Liquidity after`} />
+- <InlineMath tex={String.raw`L_1 = Liquidity after`} />
 
-<InlineMath tex={String.raw`\Delta L = L_1 - L_0`} />
+- <InlineMath tex={String.raw`\Delta L = L_1 - L_0`} />
 
 ---
 
