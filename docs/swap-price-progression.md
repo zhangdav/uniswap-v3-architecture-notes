@@ -93,7 +93,96 @@ Therefore, `zeroForOne` does not just represent “token0 → token1”; more im
 
 ![Diagram 20260406204416](/img/notes/pasted-image-20260406204416.png)
 
-#### 1.2 Determine exact input / exact output
+#### 1.2 Price changes and amount calculation (core formulas)
+
+In the previous analysis, we already understood:
+
+- swap is essentially the movement of price along the curve
+- `computeSwapStep`'s core task is to decide the range of price movement
+
+But one key question remains: when price moves from $P_a$ to $P_b$, what are the corresponding changes in token amounts? That is the mathematical source of `amountIn` and `amountOut`.
+
+In V3:
+
+<MathBlock tex={String.raw`P = \left( \frac{\text{sqrtPriceX96}}{2^{96}} \right)^2`} />
+
+and:
+
+<MathBlock tex={String.raw`P = \frac{\text{token1}}{\text{token0}}`} />
+
+##### Asset changes under fixed liquidity `L`
+
+Within a tick interval, liquidity `L` is constant, so we can derive:
+
+---
+### Case 1: token0 → token1 (price decreases)
+
+When price moves from `P_a` down to `P_b` (`P_b < P_a`):
+
+- input: token0
+- output: token1
+
+Corresponding changes are:
+
+<MathBlock tex={String.raw`\Delta amount0 = L \cdot \frac{P_b - P_a}{P_a \cdot P_b}`} />
+
+<MathBlock tex={String.raw`\Delta amount1 = L \cdot (P_a - P_b)`} />
+
+---
+### Case 2: token1 → token0 (price increases)
+
+When price moves from `P_a` up to `P_b` (`P_b > P_a`):
+
+- input: token1
+- output: token0
+
+Corresponding changes are:
+
+<MathBlock tex={String.raw`\Delta amount1 = L \cdot (P_b - P_a)`} />
+
+<MathBlock tex={String.raw`\Delta amount0 = L \cdot \frac{P_a - P_b}{P_a \cdot P_b}`} />
+
+---
+
+From the formulas, we can observe:
+
+- token1 changes linearly:
+
+<MathBlock tex={String.raw`\Delta amount1 \propto (P_b - P_a)`} />
+
+- token0 changes in an inverse-proportional way:
+
+<MathBlock tex={String.raw`\Delta amount0 \propto \frac{1}{P}`} />
+
+This means that price movement is essentially a redistribution between token0 and token1 along an asymmetric curve.
+
+In `computeSwapStep`:
+
+- `getAmount0Delta(...)`
+- `getAmount1Delta(...)`
+
+are the on-chain implementations of the formulas above.
+
+The whole swap process can be understood as:
+
+```text
+while (amountRemaining > 0) {
+    within the current tick:
+        use the formulas above to calculate amountIn / amountOut
+    if a tick is reached:
+        update liquidity
+}
+```
+
+Therefore, swap is not computed directly by a single formula. It is obtained step by step through "price advancement + local formulas".
+
+- `tickBitmap`: finds the next boundary
+- `liquidityNet`: updates liquidity
+- `SwapMath`: computes local amounts
+
+Together, these three pieces form the complete swap execution engine.
+
+#### 1.3 Determine exact input / exact output
 
 In V3, swap can have two modes:
 
@@ -175,7 +264,7 @@ Then compare with the output the user also wants:
 
 Therefore, the core logic of `exactOut` is to first compare "how much output can this segment give at most" and "how much output does the user still need", and then decide where the price should stop.
 
-#### 1.3 Recalculate `amountIn` and `amountOut`
+#### 1.4 Recalculate `amountIn` and `amountOut`
 
 In the previous judgment, `computeSwapStep` first calculated an estimate of "how much it would theoretically consume/produce if it reaches the target boundary." Its main function is to determine whether the current remaining quantity is enough to move the price to `target`.
 
@@ -303,7 +392,7 @@ Among them, `-amountRemaining` represents how many outputs the current step user
 
 The essence of this cap can be understood as a "hard upper limit protection" for the final output in exactOut mode.
 
-#### 1.4 `feeAmount` fee calculation
+#### 1.5 `feeAmount` fee calculation
 
 After understanding the recalculation of `amountIn` and `amountOut`, we still need to answer a question: Why is `feeAmount` not determined together with `amountIn` at the front, but is calculated separately at the end?
 
@@ -394,7 +483,7 @@ That is:
 
 ---
 
-### Case4：!exactIn && !max
+### Case 4: `!exactIn && !max`
 
 This means that the current output is exact, and this step has not reached the target. That is, the output requested by the user is already met halfway through the current range, so the price stops early.
 

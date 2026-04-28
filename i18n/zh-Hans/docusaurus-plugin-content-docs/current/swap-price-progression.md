@@ -93,7 +93,95 @@ bool zeroForOne = sqrtRatioCurrentX96 >= sqrtRatioTargetX96;
 
 ![Diagram 20260406204416](/img/notes/pasted-image-20260406204416.png)
 
-#### 1.2 判断 exact input / exact output
+#### 1.2 价格变化与 amount 计算（核心公式）
+
+在前面的分析中，我们已经理解：
+
+- swap 的本质是价格沿曲线移动
+- `computeSwapStep` 的核心任务是决定价格推进范围
+
+但还有一个关键问题：当价格从 $P_a$ 移动到 $P_b$ 时，对应的 token 数量变化是多少？这正是 `amountIn` 和 `amountOut` 的数学来源。
+
+在 V3 中：
+
+<MathBlock tex={String.raw`P = \left( \frac{\text{sqrtPriceX96}}{2^{96}} \right)^2`} />
+
+并且：
+
+<MathBlock tex={String.raw`P = \frac{\text{token1}}{\text{token0}}`} />
+
+##### 固定流动性 `L` 下的资产变化
+
+在一个 tick 区间内，流动性 `L` 是常数，因此可以推导出：
+
+---
+### Case 1：token0 → token1（价格下降）
+
+当价格从 `P_a` 下降到 `P_b`（`P_b < P_a`）：
+
+- 输入：token0
+- 输出：token1
+
+对应变化为：
+
+<MathBlock tex={String.raw`\Delta amount0 = L \cdot \frac{P_b - P_a}{P_a \cdot P_b}`} />
+
+<MathBlock tex={String.raw`\Delta amount1 = L \cdot (P_a - P_b)`} />
+
+---
+### Case 2：token1 → token0（价格上升）
+
+当价格从 `P_a` 上升到 `P_b`（`P_b > P_a`）：
+
+- 输入：token1
+- 输出：token0
+
+对应变化为：
+
+<MathBlock tex={String.raw`\Delta amount1 = L \cdot (P_b - P_a)`} />
+
+<MathBlock tex={String.raw`\Delta amount0 = L \cdot \frac{P_a - P_b}{P_a \cdot P_b}`} />
+
+---
+可以从公式中观察到：
+
+- token1 的变化是线性的：
+
+<MathBlock tex={String.raw`\Delta amount1 \propto (P_b - P_a)`} />
+
+- token0 的变化是反比例关系：
+
+<MathBlock tex={String.raw`\Delta amount0 \propto \frac{1}{P}`} />
+
+这意味着 price 的移动，本质上是 token0 与 token1 在非对称曲线上的再分配。
+
+在 `computeSwapStep` 中：
+
+- `getAmount0Delta(...)`
+- `getAmount1Delta(...)`
+
+正是上述公式在链上的实现。
+
+整个 swap 过程可以理解为：
+
+```text
+while (amountRemaining > 0) {
+    在当前 tick 内：
+        使用上述公式计算 amountIn / amountOut
+    若触及 tick：
+        更新 liquidity
+}
+```
+
+因此 swap 并不是直接用公式计算 output，而是通过“价格推进 + 局部公式”逐步积分得到结果。
+
+- `tickBitmap`：负责找到下一个边界
+- `liquidityNet`：负责更新流动性
+- `SwapMath`：负责局部 amount 计算
+
+三者共同构成完整的 swap 执行引擎。
+
+#### 1.3 判断 exact input / exact output
 
 在 V3 中，swap 可以有两种模式：
 
@@ -175,7 +263,7 @@ getAmount0Delta(current, target, liquidity, false)
 
 所以 `exactOut` 的核心逻辑是先比较“这一段最多能给多少 output”与“用户还差多少 output”，再决定价格停在哪里。
 
-#### 1.3 重新计算 `amountIn` 和 `amountOut`
+#### 1.4 重新计算 `amountIn` 和 `amountOut`
 
 在前面的判断中，`computeSwapStep` 先计算的是一个“如果走到目标边界，理论上会消耗/产出多少”的估计值。它的作用主要是判断当前剩余数量，是否足够让价格走到 `target`。
 
@@ -303,7 +391,7 @@ if (!exactIn && amountOut > uint256(-amountRemaining)) {
 
 这段 cap 的本质可以理解为在 exactOut 模式下，对最终输出做一次“硬性上限保护”。
 
-#### 1.4  `feeAmount` 手续费计算
+#### 1.5  `feeAmount` 手续费计算
 
 在理解完 `amountIn` 和 `amountOut` 的重新计算之后，接下来还需要回答一个问题：为什么 `feeAmount` 不是在前面和 `amountIn` 一起确定，而是要放到最后单独计算？
 
@@ -394,7 +482,7 @@ if (exactIn && sqrtRatioNextX96 != sqrtRatioTargetX96) {
 
 ---
 
-### Case4：!exactIn && !max
+### Case 4：!exactIn && !max
 
 这表示当前是 exact output，并且这一步没有走到 target。即用户所要求的 output，在当前区间中途就已经满足了，因此价格提前停止。
 
