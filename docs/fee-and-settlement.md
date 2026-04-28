@@ -97,7 +97,7 @@ Here we record the "interval" as `i` and the "time" as `t`.
 
 ---
 
-### Case 1： `t = 0`
+### Case 1: `t = 0`
 
 At the first moment, the price moves to the right and crosses two ranges.
 
@@ -117,7 +117,7 @@ Therefore, the total revenue corresponding to the first graph is:
 
 ---
 
-### Case 2：`t = 1`
+### Case 2: `t = 1`
 
 At the second moment, the price moves to the left.
 
@@ -126,7 +126,7 @@ At this moment, the price moves to the left, corresponding to the swap direction
 - There will be no Y fee in this direction
 - Therefore, there is no contribution to `feeGrowth(Y)`
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f^{(1)} = 0`} />
 
@@ -134,7 +134,7 @@ Therefore, Alice does not earn distributable fees at every moment or in every in
 
 ---
 
-### Case 3：`t = 2`
+### Case 3: `t = 2`
 
 At the third moment, the price moves to the right again and crosses more ranges.
 
@@ -322,7 +322,7 @@ Correspondence in the figure:
 - fee growth only increases
 - It is not reduced when price reverses
 
-therefore:
+Therefore:
 
 - The dotted line (fee growth) in the graph is always upward
 - There will be no decline
@@ -723,7 +723,7 @@ The outside definition flips when the price crosses the tick:
 
 <MathBlock tex={String.raw`f_{new} = f_g - f_{old}`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f_{out,i} = f_g - f_{out,i}`} />
 
@@ -926,7 +926,7 @@ And <InlineMath tex={String.raw`i_{upper}`} /> remains untouched:
 
 <MathBlock tex={String.raw`f_{out,i_{upper}} = 0`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_{g2} - (f_{g1} - 0) - 0 = f_{g2} - f_{g1}`} />
 
@@ -961,7 +961,7 @@ then:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_{g0}, \quad f_{out,i_{upper}} = 0`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_{out,i_{upper}} - f_{out,i_{lower}} = f_{g1} - f_{g0}`} />
 
@@ -994,7 +994,7 @@ then:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_{g0}, \quad f_{out,i_{upper}} = f_{g1}`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_{g2} - f_{g0} - (f_{g1} - f_{g0}) = f_{g2} - f_{g1}`} />
 
@@ -1027,7 +1027,7 @@ because:
 - <InlineMath tex={String.raw`i_{lower}`} /> initialized
 - <InlineMath tex={String.raw`i_{upper}`} /> not initialized
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_L \neq 0`} />
 
@@ -1075,7 +1075,7 @@ and:
 
 <MathBlock tex={String.raw`f_{out,i_{upper}} = 0`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_g - f_{out,i_{lower}} - f_{out,i_{upper}}`} />
 
@@ -1113,7 +1113,7 @@ at this time:
 - <InlineMath tex={String.raw`i_{lower}`} /> has been passed through (or is already on the left)
 - <InlineMath tex={String.raw`i_{upper}`} /> has not been crossed yet
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_L`} />
 
@@ -1155,7 +1155,7 @@ Assumptions:
 
 <MathBlock tex={String.raw`f_{out,i_{upper}} = f_{g1}`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_g - f_{out,i_{lower}} - f_{out,i_{upper}}`} />
 
@@ -1175,7 +1175,7 @@ F_2 - F_0
 ---
 This section explains: As long as upper has not been initialized, the "right boundary" of the interval will not truncate "fee".
 
-therefore:
+Therefore:
 
 - fee is still only truncated once by lower
 - The overall effect is still equivalent to:
@@ -1197,7 +1197,7 @@ because:
 - <InlineMath tex={String.raw`i_{lower}`} /> not initialized
 - <InlineMath tex={String.raw`i_{upper}`} /> initialized
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = 0`} />
 
@@ -1241,7 +1241,7 @@ and:
 
 <MathBlock tex={String.raw`f_{out,i_{upper}} = f_U`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_g - f_{out,i_{lower}} - f_{out,i_{upper}}`} />
 
@@ -1279,7 +1279,7 @@ at this time:
 - <InlineMath tex={String.raw`i_{lower}`} /> has not been initialized yet
 - <InlineMath tex={String.raw`i_{upper}`} /> already exists
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = 0`} />
 
@@ -1322,7 +1322,7 @@ Right now:
 
 <MathBlock tex={String.raw`f_{out,i_{upper}} = f_{g1} - f_U`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`F_2 = f_g - f_{out,i_{lower}} - f_{out,i_{upper}}`} />
 
@@ -1346,7 +1346,7 @@ This section forms a completely symmetrical relationship with the previous secti
 
 But as long as the other side is uninitialized: the interval still does not form a "complete boundary".
 
-therefore:
+Therefore:
 
 - fee is truncated on one side only
 - Overall still equivalent to global fee growth
@@ -1449,7 +1449,7 @@ at this time:
 - lower on the left
 - upper on the right
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`f_{out,i_{lower}} = f_L`} />
 

@@ -294,7 +294,7 @@ This means:
 - The input provided by the user is enough to reach the target
 - Already calculated before: "How many inputs are needed to reach the target"
 
-therefore:
+Therefore:
 
 - `amountIn` is this value, no need to recalculate
 - `amountOut` needs to be recalculated based on the real path (to avoid accuracy errors)
@@ -316,7 +316,7 @@ This means:
 - The current step can only produce so many outputs at most.
 - And user demand ≥ this maximum value
 
-therefore:
+Therefore:
 
 - `amountOut` is "the maximum output that can be provided in this range"
 - `amountIn` needs to be recalculated (because input is derived)
@@ -339,7 +339,7 @@ This means:
 - User input is not enough to go to `target`
 - The price stops somewhere in the middle `sqrtRatioNextX96`
 
-therefore:
+Therefore:
 
 - The previous "go to target's amountIn" is no longer valid
 - Must be recalculated based on real stopping point: `current → sqrtRatioNextX96`
@@ -355,7 +355,7 @@ Same reason:
 - What the user wants `output` is already satisfied within the current range
 - Price stops early
 
-therefore:
+Therefore:
 
 - `amountOut` needs to be capped (cannot exceed user requirements)
 - `amountIn` must also be recalculated based on the real price
@@ -440,7 +440,7 @@ if (exactIn && sqrtRatioNextX96 != sqrtRatioTargetX96) {
 
 ```
 
-### Case 1：`exactIn && !max`
+### Case 1: `exactIn && !max`
 
 It indicates that it is currently in exact input mode, and this step has not reached `target`. In other words, the user's current remaining input budget is not enough to push the price to the target boundary.
 
@@ -456,19 +456,19 @@ So directly get:
 
 ---
 
-### Case 2：exactIn && max
+### Case 2: `exactIn && max`
 
 Indicates that the current input is exact, and this step has successfully reached the target. That is, the user currently has a lot of remaining input, which is enough to support the price from current to target.
 
 At this time, what this step really consumes is only the "part of the input required to reach the target", rather than spending all `amountRemaining`.
 
-Therefore, we can only derive the corresponding fee for this step based on the actual net input of this step: `amountIn`** based on the rate:
+Therefore, we can only derive the corresponding fee for this step based on the actual net input of this step, `amountIn`, and the fee rate:
 
 <MathBlock tex={String.raw`\text{feeAmount} = \text{amountIn} \cdot \frac{\text{feePips}}{10^6 - \text{feePips}}`} />
 
 ---
 
-### Case 3：!exactIn && max
+### Case 3: `!exactIn && max`
 
 Indicates that the current output is exact, and this step has reached the target. That is, within the current step, even if the price is pushed to the target boundary, the output still does not meet the total user demand, so it must continue to go back.
 
@@ -493,7 +493,7 @@ Therefore it must also be used here:
 
 | Situation | Meaning | Fee calculation method | Reason |
 | ------------------ | ---------------------- | --------------------------- | ---------------------------------------- |
-| `exactIn && !max` | The input budget is exhausted first, and the price stops midway | amountRemaining - amountIn` | The current step has just exhausted the entire input budget |
+| `exactIn && !max` | The input budget is exhausted first, and the price stops midway | `amountRemaining - amountIn` | The current step has just exhausted the entire input budget |
 | `exactIn && max` | If the input is enough, the price reaches the target | Proportional formula | Only part of the input budget is used and cannot be directly subtracted |
 | `!exactIn && max` | exactOut, and go to target | Proportional formula | `amountRemaining` represents output, not input |
 | `!exactIn && !max` | exactOut, and the output has been satisfied midway | Proportional formula | `amountRemaining` still represents output and cannot participate in fee calculation |
@@ -674,7 +674,7 @@ Therefore, `amountSpecifiedRemaining` in the while loop is not a static paramete
 
 The essence is to constantly use input to fill the output gap.
 
-therefore:
+Therefore:
 
 - In `exactInput` mode, deduct the remaining input budget and accumulate the output
 - In `exactOutput` mode, deduct the remaining output target and accumulate the input cost

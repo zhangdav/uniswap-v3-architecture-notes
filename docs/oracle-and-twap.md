@@ -31,7 +31,7 @@ The key improvement in V3 is that it no longer records price directly, but recor
 
 <MathBlock tex={String.raw`tick = \log_{1.0001}(price)`} />
 
-therefore:
+Therefore:
 
 <MathBlock tex={String.raw`price = 1.0001^{tick}`} />
 

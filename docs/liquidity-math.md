@@ -413,9 +413,9 @@ Calculate first:
 
 ---
 
-### Case 1：<InlineMath tex={String.raw`P_c < P_A`} />
+### Case 1: <InlineMath tex={String.raw`P_c < P_A`} />
 
-All are token0:
+The position consists entirely of token0:
 
 <MathBlock tex={String.raw`\text{amount}_0 = L \cdot \left(\frac{1}{\sqrt{P_A}} - \frac{1}{\sqrt{P_B}}\right)`} />
 
@@ -423,7 +423,7 @@ All are token0:
 
 ---
 
-### Case 2：<InlineMath tex={String.raw`P_A \le P_c < P_B`} />
+### Case 2: <InlineMath tex={String.raw`P_A \le P_c < P_B`} />
 
 Hold two tokens at the same time:
 
@@ -433,9 +433,9 @@ Hold two tokens at the same time:
 
 ---
 
-### Case 3：<InlineMath tex={String.raw`P_c \ge P_B`} />
+### Case 3: <InlineMath tex={String.raw`P_c \ge P_B`} />
 
-All are token1:
+The position consists entirely of token1:
 
 <MathBlock tex={String.raw`\text{amount}_0 = 0`} />
 
@@ -476,7 +476,7 @@ The token calculation formula is just the specific manifestation of this relatio
 
 ---
 
-### Case 1： <InlineMath tex={String.raw`P≤PA`} />
+### Case 1: <InlineMath tex={String.raw`P_c \le P_A`} />
 
 ![Diagram 20260402213545](/img/notes/pasted-image-20260402213545.png)
 
@@ -495,11 +495,11 @@ When the price is below the range:
 
 ---
 
-### Case 2：<InlineMath tex={String.raw`P_B ≤ P)`} />
+### Case 2: <InlineMath tex={String.raw`P_c \ge P_B`} />
 
 ![Diagram 20260402213516](/img/notes/pasted-image-20260402213516.png)
 
-At this time position is completely composed of token1.
+At this time, the position is completely composed of token1.
 
 <MathBlock tex={String.raw`L_0 = \frac{y}{\sqrt{P_B} - \sqrt{P_A}}`} />
 
@@ -514,7 +514,7 @@ When the price is above the range:
 
 ---
 
-### Case 3：<InlineMath tex={String.raw`P_A < P < P_B`} />
+### Case 3: <InlineMath tex={String.raw`P_A < P < P_B`} />
 
 ![Diagram 20260402214807](/img/notes/pasted-image-20260402214807.png)
 
