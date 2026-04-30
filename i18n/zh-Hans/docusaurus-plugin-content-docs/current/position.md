@@ -1,7 +1,7 @@
 ---
 id: position
 title: 05 Position
-sidebar_label: 05 Position
+sidebar_label: Position
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

@@ -1,7 +1,7 @@
 ---
 id: overview
 title: 00 Protocol Overview
-sidebar_label: 00 Protocol Overview
+sidebar_label: Protocol Overview
 slug: /
 ---
 

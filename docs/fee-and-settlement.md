@@ -1,7 +1,7 @@
 ---
 id: fee-and-settlement
 title: 06 Fees and Fund Settlement
-sidebar_label: 06 Fees and Fund Settlement
+sidebar_label: Fees and Fund Settlement
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

@@ -1,7 +1,7 @@
 ---
 id: fee-and-settlement
 title: 06 Fee 和资金结算
-sidebar_label: 06 Fee 和资金结算
+sidebar_label: Fee 和资金结算
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

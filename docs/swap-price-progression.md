@@ -1,7 +1,7 @@
 ---
 id: swap-price-progression
 title: 04 Swap Price Progression
-sidebar_label: 04 Swap Price Progression
+sidebar_label: Swap Price Progression
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

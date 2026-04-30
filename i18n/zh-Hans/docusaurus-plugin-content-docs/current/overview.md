@@ -1,7 +1,7 @@
 ---
 id: overview
 title: 00 协议纵览
-sidebar_label: 00 协议纵览
+sidebar_label: 协议纵览
 slug: /
 ---
 

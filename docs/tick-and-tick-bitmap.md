@@ -1,7 +1,7 @@
 ---
 id: tick-and-tick-bitmap
 title: 03 Tick and TickBitmap
-sidebar_label: 03 Tick and TickBitmap
+sidebar_label: Tick and TickBitmap
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

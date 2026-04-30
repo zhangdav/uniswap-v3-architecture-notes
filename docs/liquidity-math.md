@@ -1,7 +1,7 @@
 ---
 id: liquidity-math
 title: 01 Liquidity Mathematical Expressions
-sidebar_label: 01 Liquidity Mathematical Expressions
+sidebar_label: Liquidity Mathematical Expressions
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

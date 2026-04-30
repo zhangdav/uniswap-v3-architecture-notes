@@ -1,7 +1,7 @@
 ---
 id: position-fee-settlement
 title: 07 Position 收益结算
-sidebar_label: 07 Position 收益结算
+sidebar_label: Position 收益结算
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

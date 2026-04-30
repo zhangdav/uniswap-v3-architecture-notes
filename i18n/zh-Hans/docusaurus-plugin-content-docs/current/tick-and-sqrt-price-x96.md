@@ -1,7 +1,7 @@
 ---
 id: tick-and-sqrt-price-x96
 title: 02 Tick 与 sqrtPriceX96 的关系
-sidebar_label: 02 Tick 与 sqrtPriceX96 的关系
+sidebar_label: Tick 与 sqrtPriceX96 的关系
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

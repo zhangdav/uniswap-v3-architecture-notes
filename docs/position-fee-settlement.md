@@ -1,7 +1,7 @@
 ---
 id: position-fee-settlement
 title: 07 Position Fee Settlement
-sidebar_label: 07 Position Fee Settlement
+sidebar_label: Position Fee Settlement
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

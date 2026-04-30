@@ -1,7 +1,7 @@
 ---
 id: tick-and-sqrt-price-x96
 title: 02 Tick and sqrtPriceX96
-sidebar_label: 02 Tick and sqrtPriceX96
+sidebar_label: Tick and sqrtPriceX96
 ---
 
 import InlineMath from '@site/src/components/InlineMath';

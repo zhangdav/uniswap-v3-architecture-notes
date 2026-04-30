@@ -1,7 +1,7 @@
 ---
 id: oracle-and-twap
 title: 08 Oracle 与 TWAP
-sidebar_label: 08 Oracle 与 TWAP
+sidebar_label: Oracle 与 TWAP
 ---
 
 import InlineMath from '@site/src/components/InlineMath';
